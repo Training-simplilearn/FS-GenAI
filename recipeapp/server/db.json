@@ -1,0 +1,35 @@
+{
+  "recipes": [
+    {
+      "id": "1",
+      "name": "Spaghetti Carbonara",
+      "description": "Classic Italian pasta with eggs, cheese, pancetta, and pepper.",
+      "ingredients": ["spaghetti", "eggs", "parmesan", "pancetta", "black pepper"],
+      "steps": [
+        "Boil pasta in salted water until al dente.",
+        "Fry pancetta until crisp.",
+        "Whisk eggs and cheese together.",
+        "Toss hot pasta with pancetta and egg mixture off the heat.",
+        "Season with black pepper and serve."
+      ],
+      "time": "25 mins",
+      "servings": 2,
+      "image": null
+    },
+    {
+      "id": "2",
+      "name": "Chicken Tikka Masala",
+      "description": "Tender chicken pieces in a creamy spiced tomato sauce.",
+      "ingredients": ["chicken", "yogurt", "tomatoes", "garam masala", "cream"],
+      "steps": [
+        "Marinate chicken in yogurt and spices then grill or sear.",
+        "Prepare tomato-onion sauce with spices.",
+        "Combine chicken with sauce and simmer.",
+        "Finish with cream and garnish with cilantro."
+      ],
+      "time": "45 mins",
+      "servings": 4,
+      "image": null
+    }
+  ]
+}
