@@ -6,17 +6,15 @@ import RecipeDetail from './components/RecipeDetail'
 import RecipeForm from './components/RecipeForm'
 import RecipeProvider from './context/RecipeContext'
 import RecipeEdit from './components/RecipeEdit'
+import ModeToggle from './components/ModeToggle'
+import { useContext } from 'react'
+import { RecipeContext } from './context/RecipeContextBase'
 
 function App() {
   return (
     <BrowserRouter>
       <RecipeProvider>
-      <header className="app-header">
-        <h1>Recipe App</h1>
-        <nav>
-          <Link to="/">Home</Link>
-        </nav>
-      </header>
+      <HeaderWithMode />
 
       <main>
         <Routes>
@@ -29,6 +27,7 @@ function App() {
 
       </RecipeProvider>
 
+
       <footer className="app-footer">
         <p>Built with React + Vite • Sample data for LMS assignment</p>
       </footer>
@@ -37,3 +36,17 @@ function App() {
 }
 
 export default App
+
+function HeaderWithMode() {
+  const { mode, setMode, queueLength } = useContext(RecipeContext)
+  return (
+    <header className="app-header">
+      <h1>Recipe App</h1>
+      <nav style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+        <Link to="/">Home</Link>
+        <ModeToggle mode={mode} setMode={setMode} />
+        <div style={{ fontSize: '.85rem', color: '#666' }}>Queue: {queueLength}</div>
+      </nav>
+    </header>
+  )
+}
