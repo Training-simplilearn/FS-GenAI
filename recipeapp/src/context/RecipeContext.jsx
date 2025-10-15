@@ -15,11 +15,35 @@ export default function RecipeProvider({ children }) {
   const [recipes, setRecipes] = useState(() => {
     try {
       const stored = localStorage.getItem('recipes')
-      return stored ? JSON.parse(stored) : initialRecipes
+      const parsed = stored ? JSON.parse(stored) : null
+      // Validate shape: must be array of recipe-like objects
+      const isRecipe = (x) => x && typeof x === 'object' && typeof x.name === 'string' && Array.isArray(x.steps)
+      if (Array.isArray(parsed) && parsed.length > 0 && parsed.every(isRecipe)) {
+        return parsed
+      }
+      // If corrupted (e.g., array of ingredient strings), ignore and fallback to seeds
+      return initialRecipes
     } catch {
       return initialRecipes
     }
   })
+
+  // One-time migration: if stored recipes appear to be imported from FDC, reset to local seeds
+  useEffect(() => {
+    try {
+      const looksFdc = Array.isArray(recipes) && recipes.some(r => {
+        return (
+          (typeof r?.description === 'string' && /fdc/i.test(r.description)) ||
+          (r && typeof r === 'object' && ('fdcId' in r || 'fdc_id' in r))
+        )
+      })
+      if (looksFdc) {
+        localStorage.removeItem('recipes')
+        setRecipes(initialRecipes)
+      }
+    } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // persist mode
   function setMode(newMode) {
@@ -29,7 +53,10 @@ export default function RecipeProvider({ children }) {
     if (newMode === 'server') {
       fetch('http://localhost:4000/recipes')
         .then(r => r.json())
-        .then(data => { if (Array.isArray(data)) setRecipes(data) })
+        .then(data => {
+          const isRecipe = (x) => x && typeof x === 'object' && typeof x.name === 'string'
+          if (Array.isArray(data) && data.every(isRecipe)) setRecipes(data)
+        })
         .catch(() => { /* server unreachable; keep local */ })
     }
   }
@@ -136,29 +163,9 @@ export default function RecipeProvider({ children }) {
 
   // Energy unit fixed site-wide as "cal"; no preference stored
 
-  // Optional USDA FDC fetcher if API key provided via Vite env
-  async function fetchFdc(name) {
-    try {
-      const key = import.meta.env.VITE_FDC_API_KEY
-      if (!key) return null
-      const url = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${key}&query=${encodeURIComponent(name)}&pageSize=1`
-      const res = await fetch(url)
-      if (!res.ok) return null
-      const data = await res.json()
-      const food = data?.foods?.[0]
-      if (!food || !food.foodNutrients) return null
-      const energy = food.foodNutrients.find(n => n.nutrientNumber === '208' || n.nutrientId === 1008 || /Energy/i.test(n.nutrientName))
-      if (!energy || !energy.value) return null
-      // value may be per 100g by default in FDC SR datasets; we will assume per 100g here
-      return { kcalPer100g: Number(energy.value) }
-    } catch {
-      return null
-    }
-  }
-
   async function computeCaloriesFor(recipe) {
     try {
-      const result = await computeRecipeCalories(recipe.ingredients || [], { fetchFdc })
+      const result = await computeRecipeCalories(recipe.ingredients || [])
       return result
     } catch {
       return { value: 0, unit: 'cal' }
@@ -167,7 +174,7 @@ export default function RecipeProvider({ children }) {
 
   async function computeCaloriesBreakdown(recipe) {
     try {
-      const rows = await computeRecipeCaloriesDetailed(recipe.ingredients || [], { fetchFdc })
+      const rows = await computeRecipeCaloriesDetailed(recipe.ingredients || [])
       return rows
     } catch {
       return []

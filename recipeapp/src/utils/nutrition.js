@@ -1,5 +1,5 @@
 // Nutrition calculator returning Calories label site-wide (numeric value is kcal)
-// Optionally integrates with USDA FDC if a fetcher is supplied.
+// Uses local approximations only; no external data sources.
 import { parseIngredientsArray, toGrams, toMilliliters } from './units'
 
 // basic fallback kcal per 100g approximations
@@ -28,21 +28,11 @@ function findApproxKcalPer100g(name) {
   return 200 // fallback average
 }
 
-export async function computeRecipeCalories(ingredients, opts = {}) {
-  const { fetchFdc } = opts
+export async function computeRecipeCalories(ingredients) {
   const parsed = parseIngredientsArray(ingredients)
   let totalKcal = 0
   for (const ing of parsed) {
-    let kcalPer100g = null
-    if (fetchFdc) {
-      try {
-        const fdc = await fetchFdc(ing.name)
-        if (fdc && fdc.kcalPer100g) kcalPer100g = fdc.kcalPer100g
-      } catch {
-        // ignore FDC failure, fallback to approximation
-      }
-    }
-    if (!kcalPer100g) kcalPer100g = findApproxKcalPer100g(ing.name)
+    let kcalPer100g = findApproxKcalPer100g(ing.name)
     const grams = toGrams(ing)
     totalKcal += (kcalPer100g * grams) / 100
   }
@@ -51,21 +41,11 @@ export async function computeRecipeCalories(ingredients, opts = {}) {
   return { value, unit: 'Calories' }
 }
 
-export async function computeRecipeCaloriesDetailed(ingredients, opts = {}) {
-  const { fetchFdc } = opts
+export async function computeRecipeCaloriesDetailed(ingredients) {
   const parsed = parseIngredientsArray(ingredients)
   const rows = []
   for (const ing of parsed) {
-    let kcalPer100g = null
-    if (fetchFdc) {
-      try {
-        const fdc = await fetchFdc(ing.name)
-        if (fdc && fdc.kcalPer100g) kcalPer100g = fdc.kcalPer100g
-      } catch {
-        /* ignore */
-      }
-    }
-    if (!kcalPer100g) kcalPer100g = findApproxKcalPer100g(ing.name)
+    let kcalPer100g = findApproxKcalPer100g(ing.name)
     const grams = toGrams(ing)
     const ml = toMilliliters(ing)
     const calories = (kcalPer100g * grams) / 100

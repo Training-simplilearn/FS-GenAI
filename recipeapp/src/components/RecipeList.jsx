@@ -11,10 +11,14 @@ export default function RecipeList() {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     if (!q) return recipes
-    return recipes.filter(r =>
-      r.name.toLowerCase().includes(q) ||
-      r.ingredients.join(' ').toLowerCase().includes(q)
-    )
+    return recipes.filter(r => {
+      const name = (r.name || '').toLowerCase()
+      const ingText = (Array.isArray(r.ingredients) ? r.ingredients : [])
+        .map(it => (typeof it === 'string' ? it : (it?.name || '')))
+        .join(' ')
+        .toLowerCase()
+      return name.includes(q) || ingText.includes(q)
+    })
   }, [query, recipes])
 
   return (
